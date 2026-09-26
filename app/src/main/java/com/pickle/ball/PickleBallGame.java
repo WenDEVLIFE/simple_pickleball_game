@@ -65,7 +65,12 @@ public class PickleBallGame {
 
             case PLAYING:
                 ai.update(ball, aiPaddle, court.getTop(), court.getBottom());
-                PhysicsEngine.Collision col = physics.tick(ball, court, playerPaddle, aiPaddle);
+                boolean smashActive = touch.isSmashActive();
+                PhysicsEngine.Collision col = physics.tick(ball, court, playerPaddle, aiPaddle, smashActive);
+                if (col == PhysicsEngine.Collision.PLAYER_SMASH) {
+                    touch.consumeSmash();
+                    renderer.triggerSmash();
+                }
                 handleCollision(col);
                 break;
 

@@ -9,6 +9,10 @@ public class PhysicsEngine {
     public static final float ANGLE_DEFLECTION = 50f;
 
     public Collision tick(Ball ball, Court court, Paddle playerPaddle, Paddle aiPaddle) {
+        return tick(ball, court, playerPaddle, aiPaddle, false);
+    }
+
+    public Collision tick(Ball ball, Court court, Paddle playerPaddle, Paddle aiPaddle, boolean isSmash) {
         ball.update();
 
         if (ball.getY() - ball.getRadius() < court.getTop()) {
@@ -22,19 +26,17 @@ public class PhysicsEngine {
             return Collision.WALL;
         }
 
-        // --- player paddle (left side) ---
         if (ball.getVx() < 0f && checkPaddleCollision(ball, playerPaddle, true)) {
-            deflect(ball, playerPaddle, true);
-            return Collision.PLAYER_PADDLE;
+            deflect(ball, playerPaddle, true, isSmash);
+            return isSmash ? Collision.PLAYER_SMASH : Collision.PLAYER_PADDLE;
         }
 
-        // --- AI paddle (right side) ---
         if (ball.getVx() > 0f && checkPaddleCollision(ball, aiPaddle, false)) {
-            deflect(ball, aiPaddle, false);
+            deflect(ball, aiPaddle, false, false);
+            ball.setSmashed(false);
             return Collision.AI_PADDLE;
         }
 
-        // --- scoring (ball past paddle) ---
         if (ball.getX() - ball.getRadius() < court.getLeft())  return Collision.AI_SCORES;
         if (ball.getX() + ball.getRadius() > court.getRight()) return Collision.PLAYER_SCORES;
 
@@ -54,19 +56,18 @@ public class PhysicsEngine {
                 && ball.getY() - ball.getRadius() < paddle.getBottom();
     }
 
-    private void deflect(Ball ball, Paddle paddle, boolean directionRight) {
-        // Reposition ball outside paddle
+    private void deflect(Ball ball, Paddle paddle, boolean directionRight, boolean isSmash) {
         ball.setX(directionRight ? paddle.getRight() + ball.getRadius() : paddle.getLeft() - ball.getRadius());
 
-        // Angle based on hit position (-1..+1)
         float hitRatio = Math.max(-1f, Math.min(1f, (ball.getY() - paddle.getY()) / (paddle.getHeight() / 2f)));
         double angleRad = Math.toRadians(hitRatio * ANGLE_DEFLECTION);
 
         float currentSpeed = Math.max(4f, Math.min(MAX_SPEED, ball.speed())) + SPEED_INCREMENT;
-        float cappedSpeed = Math.min(currentSpeed, MAX_SPEED);
+        float baseSpeed = isSmash ? Math.min(currentSpeed * 1.85f, MAX_SPEED * 1.6f) : Math.min(currentSpeed, MAX_SPEED);
 
-        ball.setVx((directionRight ? 1 : -1) * cappedSpeed * (float) Math.cos(angleRad));
-        ball.setVy(cappedSpeed * (float) Math.sin(angleRad));
+        ball.setSmashed(isSmash);
+        ball.setVx((directionRight ? 1 : -1) * baseSpeed * (float) Math.cos(angleRad));
+        ball.setVy(baseSpeed * (float) Math.sin(angleRad));
     }
 
     /** What the ball hit in a given frame. */
@@ -74,6 +75,7 @@ public class PhysicsEngine {
         NONE,
         WALL,
         PLAYER_PADDLE,
+        PLAYER_SMASH,
         AI_PADDLE,
         PLAYER_SCORES,
         AI_SCORES

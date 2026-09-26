@@ -28,7 +28,10 @@ public class GameRenderer {
     private final Paint playerPPaint, aiPPaint, ballPaint, ballGlow;
     private final Paint titlePaint, subtitlePaint, scorePaint, hudPaint, serveHintPaint;
     private final Paint btnTextPaint, btnPaint, btnSelPaint, overlayPaint, courtStroke;
+    private final Paint smashTextPaint, smashTrailPaint;
 
+    private float shakeIntensity = 0f;
+    private long smashBannerTimer = 0L;
 
     private RectF easyBtnRect   = new RectF();
     private RectF mediumBtnRect = new RectF();
@@ -67,6 +70,10 @@ public class GameRenderer {
         serveHintPaint = makeTextPaint(30f, Color.parseColor(CLR_BALL), Paint.Align.CENTER, null);
         btnTextPaint   = makeTextPaint(34f, Color.WHITE, Paint.Align.CENTER, Typeface.DEFAULT_BOLD);
 
+        smashTextPaint = makeTextPaint(64f, Color.parseColor("#FF5722"), Paint.Align.CENTER, Typeface.DEFAULT_BOLD);
+        smashTrailPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        smashTrailPaint.setColor(Color.parseColor("#FF9800"));
+
         btnPaint  = makePaint(Color.parseColor(CLR_BUTTON), true);
         btnSelPaint = makePaint(Color.parseColor(CLR_BUTTON_SEL), true);
 
@@ -77,6 +84,11 @@ public class GameRenderer {
         courtStroke.setColor(Color.parseColor(CLR_LINES));
         courtStroke.setStrokeWidth(4f);
         courtStroke.setStyle(Paint.Style.STROKE);
+    }
+
+    public void triggerSmash() {
+        shakeIntensity = 24f;
+        smashBannerTimer = System.currentTimeMillis();
     }
 
 
@@ -121,17 +133,22 @@ public class GameRenderer {
                          ScoreBoard score, boolean serving, int w, int h) {
         canvas.drawColor(Color.parseColor(CLR_BG));
 
+        boolean shaking = shakeIntensity > 0.5f;
+        if (shaking) {
+            canvas.save();
+            float offsetX = (float) ((Math.random() - 0.5f) * 2f * shakeIntensity);
+            float offsetY = (float) ((Math.random() - 0.5f) * 2f * shakeIntensity);
+            canvas.translate(offsetX, offsetY);
+            shakeIntensity *= 0.86f;
+        }
 
         RectF courtRect = new RectF(court.getLeft(), court.getTop(), court.getRight(), court.getBottom());
         canvas.drawRoundRect(courtRect, 12f, 12f, courtPaint);
 
-
         canvas.drawRect(court.getPlayerKitchenLeft(), court.getTop(), court.getPlayerKitchenRight(), court.getBottom(), kitchenPaint);
         canvas.drawRect(court.getAiKitchenLeft(), court.getTop(), court.getAiKitchenRight(), court.getBottom(), kitchenPaint);
 
-
         canvas.drawRect(court.getLeft(), court.getTop(), court.getRight(), court.getBottom(), courtStroke);
-
 
         Paint svcLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         svcLinePaint.setColor(Color.parseColor(CLR_LINES));
@@ -139,7 +156,6 @@ public class GameRenderer {
         svcLinePaint.setStyle(Paint.Style.STROKE);
         svcLinePaint.setPathEffect(new DashPathEffect(new float[]{8f, 8f}, 0f));
         canvas.drawLine(court.getLeft(), court.getCenterY(), court.getRight(), court.getCenterY(), svcLinePaint);
-
 
         canvas.drawLine(court.getPlayerKitchenLeft(), court.getTop(), court.getPlayerKitchenLeft(), court.getBottom(), linePaint);
         canvas.drawLine(court.getAiKitchenRight(), court.getTop(), court.getAiKitchenRight(), court.getBottom(), linePaint);
@@ -149,9 +165,30 @@ public class GameRenderer {
         drawPaddle(canvas, playerPaddle, playerPPaint);
         drawPaddle(canvas, aiPaddle, aiPPaint);
 
+        if (ball.isSmashed()) {
+            float[] tx = ball.getTrailX();
+            float[] ty = ball.getTrailY();
+            int count = ball.getTrailCount();
+            for (int i = 0; i < count; i++) {
+                int alpha = (int) (180f * (1f - (float) i / count));
+                smashTrailPaint.setAlpha(alpha);
+                float r = ball.getRadius() * (1f - (float) i / (count + 2));
+                canvas.drawCircle(tx[i], ty[i], r, smashTrailPaint);
+            }
+        }
+
         if (ball.getVx() != 0f || ball.getVy() != 0f) {
             canvas.drawCircle(ball.getX(), ball.getY(), ball.getRadius() + 4f, ballGlow);
             canvas.drawCircle(ball.getX(), ball.getY(), ball.getRadius(), ballPaint);
+        }
+
+        if (System.currentTimeMillis() - smashBannerTimer < 650L) {
+            long elapsed = System.currentTimeMillis() - smashBannerTimer;
+            float scale = 1f + (float) Math.sin((elapsed / 650f) * Math.PI) * 0.35f;
+            canvas.save();
+            canvas.scale(scale, scale, court.getCenterX(), court.getCenterY() - 80f);
+            canvas.drawText("SMASH!", court.getCenterX(), court.getCenterY() - 80f, smashTextPaint);
+            canvas.restore();
         }
 
         canvas.drawText(score.scoreText(), w / 2f, court.getTop() - 20f, scorePaint);
@@ -167,6 +204,10 @@ public class GameRenderer {
         if (serving) {
             canvas.drawRect(0f, h * 0.42f, w, h * 0.55f, overlayPaint);
             canvas.drawText("TAP TO SERVE", w / 2f, h * 0.50f, serveHintPaint);
+        }
+
+        if (shaking) {
+            canvas.restore();
         }
     }
 
