@@ -1,13 +1,9 @@
-package com.pickle.ball.audio;
+package com.pickle.ball;
 
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 
-/**
- * Thin wrapper around SoundPool.
- * Replace the 0 IDs with actual resource IDs once you add audio files to res/raw/.
- */
 public class SoundManager {
 
     private final SoundPool pool;
@@ -26,10 +22,9 @@ public class SoundManager {
                 )
                 .build();
 
-        // Replace 0 with actual resource IDs: e.g. context.getResources().getIdentifier(...)
-        sndBounce = 0; // pool.load(context, R.raw.bounce, 1);
-        sndScore  = 0; // pool.load(context, R.raw.score,  1);
-        sndServe  = 0; // pool.load(context, R.raw.serve,  1);
+        sndBounce = 0;
+        sndScore  = 0;
+        sndServe  = 0;
     }
 
     public void playBounce() { if (sndBounce != 0) pool.play(sndBounce, 0.7f, 0.7f, 1, 0, 1f); }

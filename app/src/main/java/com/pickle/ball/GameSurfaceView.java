@@ -1,4 +1,4 @@
-package com.pickle.ball.game;
+package com.pickle.ball;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -7,7 +7,6 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-/** SurfaceView that runs the game loop and forwards touch events to PickleBallGame. */
 public class GameSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
 
     private Thread gameThread;
@@ -36,7 +35,6 @@ public class GameSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 
     public PickleBallGame getGame() { return game; }
 
-    // ---- surface lifecycle ----
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
@@ -54,7 +52,6 @@ public class GameSurfaceView extends SurfaceView implements SurfaceHolder.Callba
         stopLoop();
     }
 
-    // ---- game loop ----
 
     private void startLoop() {
         running = true;
@@ -72,7 +69,7 @@ public class GameSurfaceView extends SurfaceView implements SurfaceHolder.Callba
 
     @Override
     public void run() {
-        long targetDelta = 1_000_000L / 60; // ~16.67 ms in nanos
+        long targetDelta = 1_000_000L / 60;
         while (running) {
             long start = System.nanoTime();
             Canvas canvas = null;
@@ -96,8 +93,6 @@ public class GameSurfaceView extends SurfaceView implements SurfaceHolder.Callba
             }
         }
     }
-
-    // ---- touch ----
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {

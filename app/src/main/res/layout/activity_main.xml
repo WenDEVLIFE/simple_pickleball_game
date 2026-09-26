@@ -7,7 +7,7 @@
     android:background="#121212"
     tools:context=".MainActivity">
 
-    <com.pickle.ball.game.GameSurfaceView
+    <com.pickle.ball.GameSurfaceView
         android:id="@+id/gameSurfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

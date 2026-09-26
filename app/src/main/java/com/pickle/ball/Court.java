@@ -1,4 +1,4 @@
-package com.pickle.ball.models;
+package com.pickle.ball;
 
 public class Court {
     private final float left;
@@ -22,19 +22,35 @@ public class Court {
 
     public float getNetX() { return getCenterX(); }
 
-    // Kitchen zones
+
     public float getPlayerKitchenLeft()  { return getCenterX() - getWidth() * KITCHEN_FRAC; }
     public float getPlayerKitchenRight() { return getCenterX(); }
     public float getAiKitchenLeft()      { return getCenterX(); }
     public float getAiKitchenRight()     { return getCenterX() + getWidth() * KITCHEN_FRAC; }
 
-    // Service lines
+
     public float getServiceLineTop()    { return top + getHeight() * 0.15f; }
     public float getServiceLineBottom() { return bottom - getHeight() * 0.15f; }
 
-    // Getters
     public float getLeft()  { return left; }
     public float getTop()   { return top; }
     public float getRight() { return right; }
     public float getBottom() { return bottom; }
+
+
+    public enum Difficulty {
+        EASY("Easy"),
+        MEDIUM("Medium"),
+        HARD("Hard");
+
+        private final String label;
+
+        Difficulty(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
 }

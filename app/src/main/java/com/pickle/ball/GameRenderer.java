@@ -1,24 +1,16 @@
-package com.pickle.ball.game;
+package com.pickle.ball;
 
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
-import android.graphics.PathEffect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-
-import com.pickle.ball.models.Ball;
-import com.pickle.ball.models.Court;
-import com.pickle.ball.models.Difficulty;
-import com.pickle.ball.models.Paddle;
-import com.pickle.ball.models.ScoreBoard;
 
 /** Draws every frame of the game onto a Canvas. */
 public class GameRenderer {
 
-    // Colour palette
     private static final String CLR_BG       = "#121212";
     private static final String CLR_COURT    = "#1B5E20";
     private static final String CLR_KITCHEN  = "#2E7D32";
@@ -31,13 +23,13 @@ public class GameRenderer {
     private static final String CLR_BUTTON   = "#1B5E20";
     private static final String CLR_BUTTON_SEL = "#2E7D32";
 
-    // Reusable paints
+
     private final Paint bgPaint, courtPaint, kitchenPaint, linePaint, netPaint;
     private final Paint playerPPaint, aiPPaint, ballPaint, ballGlow;
     private final Paint titlePaint, subtitlePaint, scorePaint, hudPaint, serveHintPaint;
     private final Paint btnTextPaint, btnPaint, btnSelPaint, overlayPaint, courtStroke;
 
-    // Button rects (set during drawMenu)
+
     private RectF easyBtnRect   = new RectF();
     private RectF mediumBtnRect = new RectF();
     private RectF hardBtnRect   = new RectF();
@@ -87,9 +79,8 @@ public class GameRenderer {
         courtStroke.setStyle(Paint.Style.STROKE);
     }
 
-    // =========================== MENU ===========================
 
-    public void drawMenu(Canvas canvas, int w, int h, Difficulty selectedDifficulty) {
+    public void drawMenu(Canvas canvas, int w, int h, Court.Difficulty selectedDifficulty) {
         canvas.drawColor(Color.parseColor(CLR_BG));
 
         canvas.drawText("PICKLEBALL", w / 2f, h * 0.30f, titlePaint);
@@ -104,7 +95,7 @@ public class GameRenderer {
         float startY = h * 0.52f;
         float gap = 80f;
 
-        Difficulty[] diffs = Difficulty.values();
+        Court.Difficulty[] diffs = Court.Difficulty.values();
         for (int i = 0; i < diffs.length; i++) {
             float top = startY + i * gap;
             RectF rect = new RectF(cx - bw / 2, top, cx + bw / 2, top + bh);
@@ -125,25 +116,23 @@ public class GameRenderer {
         canvas.drawText("START GAME", cx, sy + (bh + 10f) / 2 + 12f, btnTextPaint);
     }
 
-    // =========================== GAME ===========================
-
     public void drawGame(Canvas canvas, Court court, Ball ball,
                          Paddle playerPaddle, Paddle aiPaddle,
                          ScoreBoard score, boolean serving, int w, int h) {
         canvas.drawColor(Color.parseColor(CLR_BG));
 
-        // Court fill
+
         RectF courtRect = new RectF(court.getLeft(), court.getTop(), court.getRight(), court.getBottom());
         canvas.drawRoundRect(courtRect, 12f, 12f, courtPaint);
 
-        // Kitchen zones
+
         canvas.drawRect(court.getPlayerKitchenLeft(), court.getTop(), court.getPlayerKitchenRight(), court.getBottom(), kitchenPaint);
         canvas.drawRect(court.getAiKitchenLeft(), court.getTop(), court.getAiKitchenRight(), court.getBottom(), kitchenPaint);
 
-        // Court boundary
+
         canvas.drawRect(court.getLeft(), court.getTop(), court.getRight(), court.getBottom(), courtStroke);
 
-        // Center service line (dashed)
+
         Paint svcLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         svcLinePaint.setColor(Color.parseColor(CLR_LINES));
         svcLinePaint.setStrokeWidth(2f);
@@ -151,38 +140,30 @@ public class GameRenderer {
         svcLinePaint.setPathEffect(new DashPathEffect(new float[]{8f, 8f}, 0f));
         canvas.drawLine(court.getLeft(), court.getCenterY(), court.getRight(), court.getCenterY(), svcLinePaint);
 
-        // Kitchen lines
+
         canvas.drawLine(court.getPlayerKitchenLeft(), court.getTop(), court.getPlayerKitchenLeft(), court.getBottom(), linePaint);
         canvas.drawLine(court.getAiKitchenRight(), court.getTop(), court.getAiKitchenRight(), court.getBottom(), linePaint);
 
-        // Net
         canvas.drawLine(court.getNetX(), court.getTop(), court.getNetX(), court.getBottom(), netPaint);
 
-        // Paddles
         drawPaddle(canvas, playerPaddle, playerPPaint);
         drawPaddle(canvas, aiPaddle, aiPPaint);
 
-        // Ball
         if (ball.getVx() != 0f || ball.getVy() != 0f) {
             canvas.drawCircle(ball.getX(), ball.getY(), ball.getRadius() + 4f, ballGlow);
             canvas.drawCircle(ball.getX(), ball.getY(), ball.getRadius(), ballPaint);
         }
 
-        // HUD — score
         canvas.drawText(score.scoreText(), w / 2f, court.getTop() - 20f, scorePaint);
 
-        // Rally count
         canvas.drawText("Rally: " + score.getRallyCount(), w / 2f, court.getTop() - 50f, hudPaint);
 
-        // Server indicator
         String serverLabel = score.isPlayerServing() ? "Blue serves" : "Red serves";
         canvas.drawText(serverLabel, w / 2f, court.getBottom() + 40f, hudPaint);
 
-        // Side labels
         canvas.drawText("YOU", court.getLeft() + court.getWidth() * 0.08f, court.getBottom() + 70f, hudPaint);
         canvas.drawText("AI", court.getRight() - court.getWidth() * 0.08f, court.getBottom() + 70f, hudPaint);
 
-        // Serve hint
         if (serving) {
             canvas.drawRect(0f, h * 0.42f, w, h * 0.55f, overlayPaint);
             canvas.drawText("TAP TO SERVE", w / 2f, h * 0.50f, serveHintPaint);
@@ -238,5 +219,14 @@ public class GameRenderer {
         p.setTextAlign(align);
         if (tf != null) p.setTypeface(tf);
         return p;
+    }
+
+    /** High-level phases of the game. */
+    public enum GamePhase {
+        MENU,
+        SERVING,
+        PLAYING,
+        SCORED,
+        GAME_OVER
     }
 }

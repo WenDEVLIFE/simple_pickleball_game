@@ -1,8 +1,4 @@
-package com.pickle.ball.game;
-
-import com.pickle.ball.models.Ball;
-import com.pickle.ball.models.Court;
-import com.pickle.ball.models.Paddle;
+package com.pickle.ball;
 
 /** Handles ball movement, wall bounces, paddle collisions, and scoring. */
 public class PhysicsEngine {
@@ -12,11 +8,9 @@ public class PhysicsEngine {
     public static final float SERVE_SPEED      = 7f;
     public static final float ANGLE_DEFLECTION = 50f;
 
-    /** Returns what the ball hit this frame. */
     public Collision tick(Ball ball, Court court, Paddle playerPaddle, Paddle aiPaddle) {
         ball.update();
 
-        // --- top / bottom walls ---
         if (ball.getY() - ball.getRadius() < court.getTop()) {
             ball.setY(court.getTop() + ball.getRadius());
             ball.setVy(Math.abs(ball.getVy()));
@@ -73,5 +67,15 @@ public class PhysicsEngine {
 
         ball.setVx((directionRight ? 1 : -1) * cappedSpeed * (float) Math.cos(angleRad));
         ball.setVy(cappedSpeed * (float) Math.sin(angleRad));
+    }
+
+    /** What the ball hit in a given frame. */
+    public enum Collision {
+        NONE,
+        WALL,
+        PLAYER_PADDLE,
+        AI_PADDLE,
+        PLAYER_SCORES,
+        AI_SCORES
     }
 }

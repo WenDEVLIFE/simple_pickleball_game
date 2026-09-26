@@ -1,16 +1,12 @@
-package com.pickle.ball.input;
+package com.pickle.ball;
 
 import android.graphics.RectF;
 import android.view.MotionEvent;
 
-import com.pickle.ball.models.Paddle;
-
-/** Translates raw touch events into paddle movement and tap detection. */
 public class TouchController {
     private int activePointerId = -1;
     private float lastY;
 
-    /** Move the player paddle by following the finger drag. */
     public boolean handleTouch(MotionEvent event, Paddle paddle, float courtTop, float courtBottom) {
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
@@ -39,7 +35,6 @@ public class TouchController {
         return false;
     }
 
-    /** Returns true if the event is a fresh tap inside rect. */
     public boolean isTapInRect(MotionEvent event, RectF rect) {
         return event.getActionMasked() == MotionEvent.ACTION_DOWN
                 && rect != null

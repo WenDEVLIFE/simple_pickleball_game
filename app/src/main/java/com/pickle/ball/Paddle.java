@@ -1,4 +1,4 @@
-package com.pickle.ball.models;
+package com.pickle.ball;
 
 import android.graphics.RectF;
 
@@ -36,7 +36,6 @@ public class Paddle {
         y = Math.max(courtTop + height / 2f, Math.min(courtBottom - height / 2f, y));
     }
 
-    // Getters and setters
     public float getX() { return x; }
     public void setX(float x) { this.x = x; }
     public float getY() { return y; }

@@ -1,6 +1,5 @@
-package com.pickle.ball.models;
+package com.pickle.ball;
 
-/** Tracks the current score and serving side. */
 public class ScoreBoard {
     private int playerScore;
     private int aiScore;

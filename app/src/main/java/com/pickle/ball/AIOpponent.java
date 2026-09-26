@@ -1,20 +1,16 @@
-package com.pickle.ball.ai;
-
-import com.pickle.ball.models.Ball;
-import com.pickle.ball.models.Difficulty;
-import com.pickle.ball.models.Paddle;
+package com.pickle.ball;
 
 /** Simple AI controller that tracks the ball with configurable reaction delay. */
 public class AIOpponent {
-    private Difficulty difficulty;
+    private Court.Difficulty difficulty;
     private float targetY;
     private int frameCounter;
 
     public AIOpponent() {
-        this(Difficulty.MEDIUM);
+        this(Court.Difficulty.MEDIUM);
     }
 
-    public AIOpponent(Difficulty difficulty) {
+    public AIOpponent(Court.Difficulty difficulty) {
         this.difficulty = difficulty;
         this.targetY = 0f;
         this.frameCounter = 0;
@@ -57,6 +53,6 @@ public class AIOpponent {
         }
     }
 
-    public void setDifficulty(Difficulty d) { this.difficulty = d; }
-    public Difficulty getDifficulty() { return difficulty; }
+    public void setDifficulty(Court.Difficulty d) { this.difficulty = d; }
+    public Court.Difficulty getDifficulty() { return difficulty; }
 }

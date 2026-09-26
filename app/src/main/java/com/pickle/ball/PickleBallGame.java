@@ -1,16 +1,7 @@
-package com.pickle.ball.game;
+package com.pickle.ball;
 
 import android.graphics.Canvas;
 import android.view.MotionEvent;
-
-import com.pickle.ball.ai.AIOpponent;
-import com.pickle.ball.input.TouchController;
-import com.pickle.ball.models.Ball;
-import com.pickle.ball.models.Court;
-import com.pickle.ball.models.Difficulty;
-import com.pickle.ball.models.GamePhase;
-import com.pickle.ball.models.Paddle;
-import com.pickle.ball.models.ScoreBoard;
 
 /** Central game orchestrator — owns all game objects, manages phase transitions. */
 public class PickleBallGame {
@@ -25,8 +16,8 @@ public class PickleBallGame {
     private final TouchController touch = new TouchController();
     private final GameRenderer renderer = new GameRenderer();
 
-    private GamePhase phase = GamePhase.MENU;
-    private Difficulty selectedDifficulty = Difficulty.MEDIUM;
+    private GameRenderer.GamePhase phase = GameRenderer.GamePhase.MENU;
+    private Court.Difficulty selectedDifficulty = Court.Difficulty.MEDIUM;
     private String scoredBy = "";
     private long scoredTimer;
     private float screenW, screenH;
@@ -36,7 +27,6 @@ public class PickleBallGame {
     private static final long SERVE_DELAY_MS  = 700L;
     private static final float SERVE_SPEED    = 7f;
 
-    // ---- called by SurfaceView ----
 
     public void init(float w, float h) {
         screenW = w;
@@ -75,13 +65,13 @@ public class PickleBallGame {
 
             case PLAYING:
                 ai.update(ball, aiPaddle, court.getTop(), court.getBottom());
-                Collision col = physics.tick(ball, court, playerPaddle, aiPaddle);
+                PhysicsEngine.Collision col = physics.tick(ball, court, playerPaddle, aiPaddle);
                 handleCollision(col);
                 break;
 
             case SCORED:
                 if (System.currentTimeMillis() - scoredTimer >= SCORED_PAUSE_MS) {
-                    phase = GamePhase.SERVING;
+                    phase = GameRenderer.GamePhase.SERVING;
                     serveTimer = System.currentTimeMillis();
                 }
                 break;
@@ -101,7 +91,7 @@ public class PickleBallGame {
                 break;
             case SERVING:
             case PLAYING:
-                renderer.drawGame(canvas, court, ball, playerPaddle, aiPaddle, score, phase == GamePhase.SERVING, w, h);
+                renderer.drawGame(canvas, court, ball, playerPaddle, aiPaddle, score, phase == GameRenderer.GamePhase.SERVING, w, h);
                 break;
             case SCORED:
                 renderer.drawScored(canvas, w, h, scoredBy, score);
@@ -142,11 +132,11 @@ public class PickleBallGame {
     private void handleMenuTouch(MotionEvent event) {
         if (event.getActionMasked() != MotionEvent.ACTION_DOWN) return;
         if (touch.isTapInRect(event, renderer.getEasyBtnRect())) {
-            selectedDifficulty = Difficulty.EASY;
+            selectedDifficulty = Court.Difficulty.EASY;
         } else if (touch.isTapInRect(event, renderer.getMediumBtnRect())) {
-            selectedDifficulty = Difficulty.MEDIUM;
+            selectedDifficulty = Court.Difficulty.MEDIUM;
         } else if (touch.isTapInRect(event, renderer.getHardBtnRect())) {
-            selectedDifficulty = Difficulty.HARD;
+            selectedDifficulty = Court.Difficulty.HARD;
         } else if (touch.isTapInRect(event, renderer.getStartBtnRect())) {
             startNewGame();
         }
@@ -156,7 +146,7 @@ public class PickleBallGame {
         score.reset();
         ai.setDifficulty(selectedDifficulty);
         buildCourt();
-        phase = GamePhase.SERVING;
+        phase = GameRenderer.GamePhase.SERVING;
         serveTimer = System.currentTimeMillis();
     }
 
@@ -168,10 +158,10 @@ public class PickleBallGame {
         float by = court.getCenterY() + court.getHeight() * ((float) Math.random() - 0.5f) * 0.3f;
         ball.reset(bx, by);
         ball.serve(dir, SERVE_SPEED);
-        phase = GamePhase.PLAYING;
+        phase = GameRenderer.GamePhase.PLAYING;
     }
 
-    private void handleCollision(Collision col) {
+    private void handleCollision(PhysicsEngine.Collision col) {
         switch (col) {
             case PLAYER_SCORES:
                 awardPoint("Player");
@@ -192,6 +182,6 @@ public class PickleBallGame {
         }
         scoredBy = winner;
         scoredTimer = System.currentTimeMillis();
-        phase = score.isGameOver() ? GamePhase.GAME_OVER : GamePhase.SCORED;
+        phase = score.isGameOver() ? GameRenderer.GamePhase.GAME_OVER : GameRenderer.GamePhase.SCORED;
     }
 }
